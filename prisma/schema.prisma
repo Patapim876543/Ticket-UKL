@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  petugas_kereta
+  petugas_pesawat
+  user
+}
+
+enum TransportType {
+  kereta
+  pesawat
+}
+
+enum SeatClass {
+  ekonomi
+  vip
+  eksekutif
+}
+
+enum TicketStatus {
+  tersedia
+  dipesan
+  dibatalkan
+}
+
+enum ScheduleStatus {
+  scheduled
+  boarding
+  departed
+  arrived
+  cancelled
+}
+
+enum OrderStatus {
+  aktif
+  digunakan
+  direfund
+  dibatalkan
+}
+
+enum TransactionType {
+  topup
+  pembelian
+  refund
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  username  String   @unique
+  email     String   @unique
+  phone     String?
+  password  String
+  role      Role     @default(user)
+  balance   Decimal  @default(0.00) @db.Decimal(15, 2)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  orders            Order[]       @relation("UserOrders")
+  processedOrders   Order[]       @relation("ProcessorOrders")
+  transactions      Transaction[] @relation("UserTransactions")
+  processedTransactions Transaction[] @relation("AdminTransactions")
+
+  @@map("users")
+}
+
+model Route {
+  id              String        @id @default(uuid())
+  transportType   TransportType @map("transport_type")
+  origin          String
+  destination     String
+  originCode      String?       @map("origin_code")
+  destinationCode String?       @map("destination_code")
+  distanceKm      Float?        @map("distance_km")
+  isActive        Boolean       @default(true) @map("is_active")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  schedules Schedule[]
+
+  @@map("routes")
+}
+
+model Schedule {
+  id                   String         @id @default(uuid())
+  routeId              String         @map("route_id")
+  vehicleName          String         @map("vehicle_name")
+  vehicleCode          String?        @map("vehicle_code")
+  departureTime        DateTime       @map("departure_time")
+  arrivalTime          DateTime       @map("arrival_time")
+  totalSeatsEconomy    Int            @default(0) @map("total_seats_economy")
+  totalSeatsVip        Int            @default(0) @map("total_seats_vip")
+  totalSeatsExecutive  Int            @default(0) @map("total_seats_executive")
+  status               ScheduleStatus @default(scheduled)
+  isActive             Boolean        @default(true) @map("is_active")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+
+  route   Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@map("schedules")
+}
+
+model Ticket {
+  id         String       @id @default(uuid())
+  scheduleId String       @map("schedule_id")
+  seatClass  SeatClass    @map("seat_class")
+  seatNumber String       @map("seat_number")
+  price      Decimal      @db.Decimal(15, 2)
+  status     TicketStatus @default(tersedia)
+  isActive   Boolean      @default(true) @map("is_active")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  order    Order?
+
+  @@unique([scheduleId, seatNumber])
+  @@map("tickets")
+}
+
+model Order {
+  id                 String      @id @default(uuid())
+  orderCode          String      @unique @map("order_code")
+  userId             String      @map("user_id")
+  ticketId           String      @unique @map("ticket_id")
+  passengerName      String      @map("passenger_name")
+  passengerIdNumber  String      @map("passenger_id_number")
+  passengerPhone     String?     @map("passenger_phone")
+  totalPrice         Decimal     @map("total_price") @db.Decimal(15, 2)
+  status             OrderStatus @default(aktif)
+  processedBy        String?     @map("processed_by")
+  refundReason       String?     @map("refund_reason") @db.Text
+  refundedAt         DateTime?   @map("refunded_at")
+  notes              String?     @db.Text
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  user      User   @relation("UserOrders",     fields: [userId],      references: [id])
+  ticket    Ticket @relation(fields: [ticketId], references: [id])
+  processor User?  @relation("ProcessorOrders", fields: [processedBy], references: [id])
+
+  @@map("orders")
+}
+
+model Transaction {
+  id            String          @id @default(uuid())
+  userId        String          @map("user_id")
+  type          TransactionType
+  amount        Decimal         @db.Decimal(15, 2)
+  balanceBefore Decimal         @map("balance_before") @db.Decimal(15, 2)
+  balanceAfter  Decimal         @map("balance_after") @db.Decimal(15, 2)
+  description   String?
+  referenceId   String?         @map("reference_id")
+  processedBy   String?         @map("processed_by")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  user  User  @relation("UserTransactions", fields: [userId],      references: [id])
+  admin User? @relation("AdminTransactions", fields: [processedBy], references: [id])
+
+  @@map("transactions")
+}
