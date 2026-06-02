@@ -80,6 +80,9 @@ export class UsersService {
           departureTime: s.departureTime,
           arrivalTime:   s.arrivalTime,
           route:         s.route,
+          delayMinutes:  s.delayMinutes,
+          gateNumber:    s.gateNumber,
+          flightStatus:  s.flightStatus,
           availableSeats: {
             ekonomi:   { count: g.ekonomi.length,   minPrice: g.ekonomi.length   ? Math.min(...g.ekonomi.map((t: any)   => Number(t.price))) : null },
             vip:       { count: g.vip.length,        minPrice: g.vip.length        ? Math.min(...g.vip.map((t: any)        => Number(t.price))) : null },
