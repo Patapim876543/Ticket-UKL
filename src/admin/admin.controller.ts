@@ -11,16 +11,18 @@ import { Role } from '../common/enums/role.enum';
 @ApiTags('👑 Admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.ADMIN, Role.PETUGAS_KERETA, Role.PETUGAS_PESAWAT)
 @Controller('admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
   @Get('dashboard')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Statistik sistem' })
   getDashboard() { return this.adminService.getDashboard(); }
 
   @Get('users')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Daftar semua user' })
   @ApiQuery({ name: 'role',   required: false })
   @ApiQuery({ name: 'search', required: false })
@@ -34,22 +36,27 @@ export class AdminController {
   ) { return this.adminService.getAllUsers(role, search, page, limit); }
 
   @Get('users/:id')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Detail user by ID' })
   getUserById(@Param('id') id: string) { return this.adminService.getUserById(id); }
 
   @Post('users')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Buat user baru' })
   createUser(@Body() dto: CreateUserDto) { return this.adminService.createUser(dto); }
 
   @Put('users/:id')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update user' })
   updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) { return this.adminService.updateUser(id, dto); }
 
   @Delete('users/:id')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Hapus user' })
   deleteUser(@Param('id') id: string, @CurrentUser() user: any) { return this.adminService.deleteUser(id, user.id); }
 
   @Post('users/:id/topup')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Topup saldo user' })
   topup(@Param('id') id: string, @Body() dto: TopupDto, @CurrentUser() user: any) { return this.adminService.topupBalance(id, dto, user.id); }
 
