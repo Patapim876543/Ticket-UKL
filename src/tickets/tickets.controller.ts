@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { TicketsService } from './tickets.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -36,6 +36,32 @@ export class TicketsController {
   @ApiOperation({ summary: 'Daftar penumpang (petugas/admin)' })
   getPassengers(@Param('scheduleId') id: string, @CurrentUser() user: any) {
     return this.svc.getPassengers(id, user.role);
+  }
+
+  @Patch(':orderId/boarding')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update status boarding penumpang (petugas/admin)' })
+  updateBoardingStatus(
+    @Param('orderId') orderId: string,
+    @Body() dto: { boardingStatus: string },
+    @CurrentUser() user: any
+  ) {
+    return this.svc.updateBoardingStatus(orderId, dto.boardingStatus, user.role);
+  }
+
+  @Patch(':orderId/baggage')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...STAFF)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update timbangan bagasi penumpang (petugas/admin)' })
+  updateBaggageWeight(
+    @Param('orderId') orderId: string,
+    @Body() dto: { baggageWeight: number },
+    @CurrentUser() user: any
+  ) {
+    return this.svc.updateBaggageWeight(orderId, dto.baggageWeight, user.role);
   }
 
   @Get(':id')

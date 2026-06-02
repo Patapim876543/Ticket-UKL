@@ -23,3 +23,20 @@ export class UpdateScheduleDto {
   @ApiPropertyOptional({ enum: ['scheduled','boarding','departed','arrived','cancelled'] })
   @IsOptional() @IsString() status?: string;
 }
+
+export class DelayGateDto {
+  @ApiPropertyOptional({ example: 'Terlambat 15 Menit' })
+  @IsOptional()
+  @IsString()
+  delayMinutes?: string;
+
+  @ApiPropertyOptional({ example: 'Gate 2B' })
+  @IsOptional()
+  @IsString()
+  gateNumber?: string;
+
+  @ApiPropertyOptional({ example: 'Boarding Now' })
+  @IsOptional()
+  @IsString()
+  flightStatus?: string;
+}

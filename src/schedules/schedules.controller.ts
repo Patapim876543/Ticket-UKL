@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { SchedulesService } from './schedules.service';
-import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
+import { CreateScheduleDto, UpdateScheduleDto, DelayGateDto } from './dto/schedule.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -39,6 +39,19 @@ export class SchedulesController {
   @ApiOperation({ summary: 'Update jadwal' })
   update(@Param('id') id: string, @Body() dto: UpdateScheduleDto, @CurrentUser() user: any) {
     return this.svc.update(id, dto, user.role);
+  }
+
+  @Patch(':id/delay-gate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.PETUGAS_KERETA, Role.PETUGAS_PESAWAT)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update status delay & gate keberangkatan (petugas/admin)' })
+  updateDelayGate(
+    @Param('id') id: string,
+    @Body() dto: DelayGateDto,
+    @CurrentUser() user: any
+  ) {
+    return this.svc.updateDelayGate(id, dto, user.role);
   }
 
   @Delete(':id')

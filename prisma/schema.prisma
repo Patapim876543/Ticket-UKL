@@ -44,6 +44,7 @@ enum OrderStatus {
   digunakan
   direfund
   dibatalkan
+  pending_refund
 }
 
 enum TransactionType {
@@ -101,6 +102,9 @@ model Schedule {
   totalSeatsVip        Int            @default(0) @map("total_seats_vip")
   totalSeatsExecutive  Int            @default(0) @map("total_seats_executive")
   status               ScheduleStatus @default(scheduled)
+  delayMinutes         String         @default("Tepat Waktu") @map("delay_minutes")
+  gateNumber           String         @default("Gate 1A") @map("gate_number")
+  flightStatus         String         @default("Scheduled") @map("flight_status")
   isActive             Boolean        @default(true) @map("is_active")
   createdAt            DateTime       @default(now()) @map("created_at")
   updatedAt            DateTime       @updatedAt @map("updated_at")
@@ -139,6 +143,8 @@ model Order {
   passengerPhone     String?     @map("passenger_phone")
   totalPrice         Decimal     @map("total_price") @db.Decimal(15, 2)
   status             OrderStatus @default(aktif)
+  boardingStatus     String      @default("Booked") @map("boarding_status")
+  baggageWeight      Int         @default(0) @map("baggage_weight")
   processedBy        String?     @map("processed_by")
   refundReason       String?     @map("refund_reason") @db.Text
   refundedAt         DateTime?   @map("refunded_at")
@@ -170,4 +176,27 @@ model Transaction {
   admin User? @relation("AdminTransactions", fields: [processedBy], references: [id])
 
   @@map("transactions")
+}
+
+model CsContact {
+  id            String       @id @default(uuid())
+  name          String
+  phone         String
+  email         String
+  transportType TransportType @map("transport_type")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@map("cs_contacts")
+}
+
+model ShiftLog {
+  id          String   @id @default(uuid())
+  officerName String   @map("officer_name")
+  officerRole String   @map("officer_role")
+  text        String   @db.Text
+  status      String   @default("Normal")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("shift_logs")
 }

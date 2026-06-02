@@ -40,6 +40,27 @@ async function main() {
   const routes = await Promise.all(routeDefs.map(r => prisma.route.create({ data: r })));
   console.log(`✅ ${routes.length} rute dibuat.`);
 
+  // ── CS CONTACTS ─────────────────────────────────────────────────────────────
+  const csContacts = await Promise.all([
+    prisma.csContact.create({
+      data: {
+        name: 'Layanan Pelanggan KAI',
+        phone: '121',
+        email: 'cs@kai.id',
+        transportType: TransportType.kereta,
+      },
+    }),
+    prisma.csContact.create({
+      data: {
+        name: 'Garuda Indonesia CS',
+        phone: '0804-1-807-807',
+        email: 'cs@garuda-indonesia.com',
+        transportType: TransportType.pesawat,
+      },
+    }),
+  ]);
+  console.log(`✅ ${csContacts.length} kontak CS dibuat.`);
+
   // ── SCHEDULES + TIKET ──────────────────────────────────────────────────────
   const d1 = new Date(); d1.setDate(d1.getDate() + 1);
   const d2 = new Date(); d2.setDate(d2.getDate() + 2);

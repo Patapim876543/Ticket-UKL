@@ -28,16 +28,12 @@ export class UsersService {
 
   async getCSContact(transportType?: string) {
     const db = this.prisma as any;
-    const roles = transportType === 'kereta'
-      ? ['petugas_kereta']
-      : transportType === 'pesawat'
-        ? ['petugas_pesawat']
-        : ['petugas_kereta', 'petugas_pesawat'];
+    const where: any = {};
+    if (transportType) where.transportType = transportType;
 
-    const data = await db.user.findMany({
-      where: { role: { in: roles }, isActive: true },
-      select: { id:true, name:true, role:true, email:true, phone:true },
-      orderBy: [{ role: 'asc' }, { name: 'asc' }],
+    const data = await db.csContact.findMany({
+      where,
+      orderBy: { name: 'asc' },
     });
     return { message: 'Kontak customer service.', data };
   }

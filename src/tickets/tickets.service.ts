@@ -92,6 +92,7 @@ export class TicketsService {
         departureTime: schedule.departureTime, route: schedule.route,
       },
       data: orders.map((o: any) => ({
+        id:                 o.id,
         orderCode:          o.orderCode,
         seatNumber:         o.ticket.seatNumber,
         seatClass:          o.ticket.seatClass,
@@ -99,9 +100,43 @@ export class TicketsService {
         passengerIdNumber:  o.passengerIdNumber,
         passengerPhone:     o.passengerPhone,
         status:             o.status,
+        boardingStatus:     o.boardingStatus,
+        baggageWeight:      o.baggageWeight,
         buyer:              o.user,
       })),
     };
+  }
+
+  async updateBoardingStatus(orderId: string, boardingStatus: string, role: string) {
+    const db = this.prisma as any;
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      include: { ticket: { include: { schedule: { include: { route: true } } } } },
+    });
+    if (!order) throw new NotFoundException('Pesanan tidak ditemukan.');
+    this.checkAccess(order.ticket.schedule.route.transportType, role);
+
+    const updated = await db.order.update({
+      where: { id: orderId },
+      data: { boardingStatus },
+    });
+    return { message: 'Status boarding berhasil diperbarui.', data: updated };
+  }
+
+  async updateBaggageWeight(orderId: string, baggageWeight: number, role: string) {
+    const db = this.prisma as any;
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      include: { ticket: { include: { schedule: { include: { route: true } } } } },
+    });
+    if (!order) throw new NotFoundException('Pesanan tidak ditemukan.');
+    this.checkAccess(order.ticket.schedule.route.transportType, role);
+
+    const updated = await db.order.update({
+      where: { id: orderId },
+      data: { baggageWeight },
+    });
+    return { message: 'Berat bagasi berhasil diperbarui.', data: updated };
   }
 
   async getById(id: string) {

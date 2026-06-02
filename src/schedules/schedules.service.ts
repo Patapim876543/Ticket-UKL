@@ -103,4 +103,29 @@ export class SchedulesService {
     await (this.prisma as any).schedule.delete({ where: { id } });
     return { message: 'Jadwal berhasil dihapus.' };
   }
+
+  async updateDelayGate(
+    id: string,
+    dto: { delayMinutes?: string; gateNumber?: string; flightStatus?: string },
+    role: string,
+  ) {
+    const db = this.prisma as any;
+    const sch = await db.schedule.findUnique({
+      where: { id },
+      include: { route: true },
+    });
+    if (!sch) throw new NotFoundException('Jadwal tidak ditemukan.');
+    this.checkAccess(sch.route.transportType, role);
+
+    const updateData: any = {};
+    if (dto.delayMinutes !== undefined) updateData.delayMinutes = dto.delayMinutes;
+    if (dto.gateNumber !== undefined)   updateData.gateNumber   = dto.gateNumber;
+    if (dto.flightStatus !== undefined) updateData.flightStatus = dto.flightStatus;
+
+    const data = await db.schedule.update({
+      where: { id },
+      data: updateData,
+    });
+    return { message: 'Status operasional jadwal berhasil diperbarui.', data };
+  }
 }
