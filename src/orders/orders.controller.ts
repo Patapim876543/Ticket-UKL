@@ -39,4 +39,11 @@ export class OrdersController {
   refund(@Param('id') id: string, @Body() body: any, @CurrentUser() u: any) {
     return this.svc.refund(id, u, body.refund_reason);
   }
+
+  @Post(':id/request-refund')
+  @ApiOperation({ summary: 'Ajukan refund tiket (customer)' })
+  @ApiBody({ schema: { example: { refund_reason:'Alasan refund' } } })
+  requestRefund(@Param('id') id: string, @Body() body: any, @CurrentUser() u: any) {
+    return this.svc.requestRefund(id, u, body.refund_reason);
+  }
 }

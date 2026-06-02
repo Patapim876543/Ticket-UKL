@@ -259,7 +259,7 @@ export class OrdersService {
       );
     }
 
-    if (order.status !== 'aktif') {
+    if (order.status !== 'aktif' && order.status !== 'pending_refund') {
       throw new BadRequestException(
         `Status '${order.status}' tidak bisa direfund.`,
       );
@@ -452,5 +452,43 @@ export class OrdersService {
     return {
       data: order,
     };
+  }
+
+  // =========================
+  // REQUEST REFUND (CUSTOMER)
+  // =========================
+  async requestRefund(id: string, requestUser: any, reason: string) {
+    const db = this.prisma as any;
+    if (!reason || !reason.trim()) {
+      throw new BadRequestException('Alasan refund harus diisi.');
+    }
+
+    const order = await db.order.findUnique({
+      where: { id },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order tidak ditemukan.');
+    }
+
+    if (requestUser.role === 'user' && order.userId !== requestUser.id) {
+      throw new ForbiddenException('Akses ditolak.');
+    }
+
+    if (order.status !== 'aktif') {
+      throw new BadRequestException('Order tidak aktif / tidak bisa direfund.');
+    }
+
+    if (order.boardingStatus === 'Boarded') {
+      throw new BadRequestException('Tiket yang sudah boarding tidak bisa direfund.');
+    }
+
+    return db.order.update({
+      where: { id },
+      data: {
+        status: 'pending_refund',
+        refundReason: reason,
+      },
+    });
   }
 }
