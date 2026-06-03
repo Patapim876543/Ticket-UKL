@@ -32,10 +32,32 @@ export class SchedulesService {
       where.departureTime = { gte: s, lte: e };
     }
 
-    const data = await (this.prisma as any).schedule.findMany({
+    const schedules = await (this.prisma as any).schedule.findMany({
       where,
-      include: { route: true },
+      include: {
+        route: true,
+        tickets: {
+          select: {
+            seatClass: true,
+            price: true,
+          },
+        },
+      },
       orderBy: { departureTime: 'asc' },
+    });
+
+    const data = schedules.map((s: any) => {
+      const priceEconomy = s.tickets.find((t: any) => t.seatClass === 'ekonomi')?.price || 0;
+      const priceExecutive = s.tickets.find((t: any) => t.seatClass === 'eksekutif')?.price || 0;
+      const priceVip = s.tickets.find((t: any) => t.seatClass === 'vip')?.price || 0;
+
+      const { tickets, ...rest } = s;
+      return {
+        ...rest,
+        priceEconomy: Number(priceEconomy),
+        priceExecutive: Number(priceExecutive),
+        priceVip: Number(priceVip),
+      };
     });
 
     return { data };
